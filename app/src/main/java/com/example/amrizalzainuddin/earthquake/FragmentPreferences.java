@@ -1,21 +1,14 @@
 package com.example.amrizalzainuddin.earthquake;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.Spinner;
+
+import java.util.List;
 
 
-public class PreferencesActivity extends PreferenceActivity {
+public class FragmentPreferences extends PreferenceActivity {
 
     public static final String USER_PREFERENCE = "USER_PREFERENCE";
     public static final String PREF_AUTO_UPDATE = "PREF_AUTO_UPDATE";
@@ -26,9 +19,8 @@ public class PreferencesActivity extends PreferenceActivity {
     public static final String PREF_UPDATE_FREQ = "PREF_UPDATE_FREQ";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.userpreferences);
+    public void onBuildHeaders(List<Header> target) {
+        loadHeadersFromResource(R.xml.preference_headers, target);
     }
 
     @Override
