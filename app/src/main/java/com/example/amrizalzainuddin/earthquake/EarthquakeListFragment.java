@@ -5,6 +5,7 @@ import android.app.LoaderManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.CursorLoader;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.location.Location;
@@ -59,13 +60,7 @@ public class EarthquakeListFragment extends ListFragment implements LoaderManage
 
         getLoaderManager().initLoader(0, null, this);
 
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                refreshEarthquakes();
-            }
-        });
-        t.start();
+        refreshEarthquakes();
     }
 
     private static final String TAG = "EARTHQUAKE";
@@ -73,121 +68,8 @@ public class EarthquakeListFragment extends ListFragment implements LoaderManage
 
     public void refreshEarthquakes(){
 
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                getLoaderManager().restartLoader(0, null, EarthquakeListFragment.this);
-            }
-        });
-
-        URL url = null;
-        try{
-            String quakeFeed = getString(R.string.quake_feed);
-            url = new URL(quakeFeed);
-
-            URLConnection connection;
-            connection = url.openConnection();
-
-            HttpURLConnection httpConnection = (HttpURLConnection)connection;
-            int responseCode = httpConnection.getResponseCode();
-
-            if(responseCode == HttpURLConnection.HTTP_OK){
-
-                InputStream in = httpConnection.getInputStream();
-
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                DocumentBuilder db = dbf.newDocumentBuilder();
-
-                Document dom = db.parse(in);
-                Element docEle = dom.getDocumentElement();
-
-                NodeList nl = docEle.getElementsByTagName("entry");
-                if (nl != null && nl.getLength() > 0) {
-                    for (int i = 0; i < nl.getLength(); i++) {
-                        Element entry = (Element) nl.item(i);
-                        Element title = (Element) entry.getElementsByTagName("title").item(0);
-                        Element g = (Element)entry.getElementsByTagName("georss:point").item(0);
-                        Element when = (Element) entry.getElementsByTagName("updated").item(0);
-                        Element link = (Element) entry.getElementsByTagName("link").item(0);
-
-                        String details = title.getFirstChild().getNodeValue();
-                        String hostname = "http://earthquake.usgs.gov";
-                        String linkString = hostname + link.getAttribute("href");
-
-                        if(g == null)
-                            continue;
-
-                        String point = g.getFirstChild().getNodeValue();
-                        String dt = when.getFirstChild().getNodeValue();
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd'T'hh:mm:ss'Z'");
-                        Date gdate = new GregorianCalendar(0, 0, 0).getTime();
-                        try {
-                            gdate = sdf.parse(dt);
-                        } catch (ParseException e) {
-                            Log.d(TAG, "Date parsing exception,", e);
-                        }
-
-                        String[] location = point.split(" ");
-                        Location l = new Location("dummyGPS");
-                        l.setLatitude(Double.parseDouble(location[0]));
-                        l.setLongitude(Double.parseDouble(location[1]));
-
-                        String magnitudeString = details.split(" ")[1];
-                        int end = magnitudeString.length() - 1;
-                        double magnitude = Double.parseDouble(magnitudeString.substring(0, end));
-
-                        details = details.split(",")[1].trim();
-
-                        final Quake quake = new Quake(gdate, details, l, magnitude, linkString);
-
-                        addNewQuake(quake);
-                    }
-                }
-            }
-        }catch (MalformedURLException e){
-            Log.d(TAG, "MalformedURLException");
-        }catch(IOException e){
-            Log.d(TAG, "IOException");
-        }catch (ParserConfigurationException e){
-            Log.d(TAG, "ParserConfigurationException");
-        }catch (SAXException e){
-            Log.d(TAG, "SAXException");
-        }catch (NetworkOnMainThreadException e){
-            Log.d(TAG, "NetworkOnMainThreadException");
-        }
-        finally
-        {
-            Log.d(TAG, "Something");
-        }
-
-    }
-
-    private void addNewQuake(Quake _quake) {
-        ContentResolver cr = getActivity().getContentResolver();
-        //Construct a where clause to make sure we don't already have this
-        //earthquake in the provide
-        String w = EarthquakeProvider.KEY_DATE + " = " + _quake.getDate().getTime();
-
-        //if the earthquake is new, insert it into the provider.
-        Cursor query = cr.query(EarthquakeProvider.CONTENT_URI, null, w, null, null);
-        if(query.getCount() == 0){
-            ContentValues values = new ContentValues();
-
-            values.put(EarthquakeProvider.KEY_DATE, _quake.getDate().getTime());
-            values.put(EarthquakeProvider.KEY_DETAILS, _quake.getDetails());
-            values.put(EarthquakeProvider.KEY_SUMMARY, _quake.toString());
-
-            double lat = _quake.getLocation().getLatitude();
-            double lng = _quake.getLocation().getLongitude();
-            values.put(EarthquakeProvider.KEY_LOCATION_LAT, lat);
-            values.put(EarthquakeProvider.KEY_LOCATION_LNG, lng);
-            values.put(EarthquakeProvider.KEY_LINK, _quake.getLink());
-            values.put(EarthquakeProvider.KEY_MAGNITUDE, _quake.getMagnitude());
-
-            cr.insert(EarthquakeProvider.CONTENT_URI, values);
-        }
-
-        query.close();
+       getLoaderManager().restartLoader(0, null, EarthquakeListFragment.this);
+       getActivity().startService(new Intent(getActivity(), EarthquakeUpdateService.class));
     }
 
     @Override
