@@ -43,6 +43,11 @@
         </activity>
         <service android:name=".EarthquakeUpdateService"
             android:enabled="true"/>
+        <receiver android:name=".EarthquakeAlarmReceiver">
+            <intent-filter>
+                <action android:name="com.example.amrizalzainuddin.earthquake.ACTION_REFRESH_EARTHQUAKE_ALARM"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
