@@ -1,6 +1,7 @@
 package com.example.amrizalzainuddin.earthquake;
 
 import android.app.AlarmManager;
+import android.app.IntentService;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
@@ -41,32 +42,19 @@ import javax.xml.parsers.ParserConfigurationException;
 /**
  * Created by amrizal.zainuddin on 14/7/2015.
  */
-public class EarthquakeUpdateService extends Service {
+public class EarthquakeUpdateService extends IntentService {
 
     public static  String TAG = "EARTHQUAKE_UPDATE_SERVICE";
 
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        //retrieve the shared preferences
-        Context context = getApplicationContext();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+    public EarthquakeUpdateService(){
+        super("EarthquakeUpdateService");
+    }
 
-        int updateFreq = Integer.parseInt(prefs.getString(PreferencesActivity.PREF_UPDATE_FREQ, "60"));
-        boolean autoUpdateChecked = prefs.getBoolean(PreferencesActivity.PREF_AUTO_UPDATE, false);
-
-        if(autoUpdateChecked){
-            int alarmType = AlarmManager.ELAPSED_REALTIME_WAKEUP;
-            long timeToRefresh = SystemClock.elapsedRealtime() + updateFreq*60*1000;
-            alarmManager.setInexactRepeating(alarmType, timeToRefresh, updateFreq*60*1000, alarmIntent);
-        }
-        else{
-            alarmManager.cancel(alarmIntent);
-        }
-
-        return Service.START_NOT_STICKY;
+    public EarthquakeUpdateService(String name) {
+        super(name);
     }
 
     @Override
@@ -83,6 +71,27 @@ public class EarthquakeUpdateService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        //retrieve the shared preferences
+        Context context = getApplicationContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        int updateFreq = Integer.parseInt(prefs.getString(PreferencesActivity.PREF_UPDATE_FREQ, "60"));
+        boolean autoUpdateChecked = prefs.getBoolean(PreferencesActivity.PREF_AUTO_UPDATE, false);
+
+        if(autoUpdateChecked){
+            int alarmType = AlarmManager.ELAPSED_REALTIME_WAKEUP;
+            long timeToRefresh = SystemClock.elapsedRealtime() + updateFreq*60*1000;
+            alarmManager.setInexactRepeating(alarmType, timeToRefresh, updateFreq*60*1000, alarmIntent);
+        }
+        else{
+            alarmManager.cancel(alarmIntent);
+        }
+
+        refreshEarthquakes();
     }
 
     private void addNewQuake(Quake _quake) {
@@ -189,9 +198,7 @@ public class EarthquakeUpdateService extends Service {
         }catch (NetworkOnMainThreadException e){
             Log.d(TAG, "NetworkOnMainThreadException");
         }
-        finally
-        {
-            stopSelf();
+        finally{
         }
     }
 }
