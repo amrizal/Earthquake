@@ -7,6 +7,7 @@
     <string name="min_quake_mag_prompt">Minimum Quake Magnitude</string>
     <string name="menu_preferences">Preferences</string>
     <string name="title_activity_preferences">PreferencesActivity</string>
+    <string name="search_description">Search earthquake locations</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
