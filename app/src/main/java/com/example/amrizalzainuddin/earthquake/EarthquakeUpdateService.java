@@ -162,7 +162,7 @@ public class EarthquakeUpdateService extends IntentService {
 
                         String point = g.getFirstChild().getNodeValue();
                         String dt = when.getFirstChild().getNodeValue();
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd'T'hh:mm:ss'Z'");
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd'T'hh:mm:ss.SSS'Z'");
                         Date gdate = new GregorianCalendar(0, 0, 0).getTime();
                         try {
                             gdate = sdf.parse(dt);
@@ -178,6 +178,9 @@ public class EarthquakeUpdateService extends IntentService {
                         String magnitudeString = details.split(" ")[1];
                         int end = magnitudeString.length() - 1;
                         double magnitude = Double.parseDouble(magnitudeString.substring(0, end));
+
+                        if(details.indexOf(",") < 0)
+                            continue;
 
                         details = details.split(",")[1].trim();
 

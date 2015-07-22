@@ -17,6 +17,7 @@ import android.preference.PreferenceManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
@@ -46,14 +47,7 @@ public class Earthquake extends Activity {
 
         updateFromPreferences();
 
-        //use the search manager to find the searchableinfo related to this
-        //activity
-        SearchManager searchManager = (SearchManager)getSystemService(Context.SEARCH_SERVICE);
-        SearchableInfo searchableInfo = searchManager.getSearchableInfo(getComponentName());
 
-        //bind the activity's searchableinfo to the search view
-        SearchView searchView = (SearchView)findViewById(R.id.searchView);
-        searchView.setSearchableInfo(searchableInfo);
 
         ActionBar actionBar = getActionBar();
 
@@ -160,7 +154,17 @@ public class Earthquake extends Activity {
     public boolean onCreateOptionsMenu(Menu menu){
         super.onCreateOptionsMenu(menu);
 
-        menu.add(0, MENU_PREFERENCES, Menu.NONE, R.string.menu_preferences);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+
+        //use the search manager to find the searchableinfo related to this
+        //activity
+        SearchManager searchManager = (SearchManager)getSystemService(Context.SEARCH_SERVICE);
+
+        //bind the activity's searchableinfo to the search view
+        SearchView searchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
         return true;
     }
 
@@ -172,11 +176,17 @@ public class Earthquake extends Activity {
 
         switch (item.getItemId())
         {
-            case (MENU_PREFERENCES):
+            case (R.id.menu_refresh):{
+                startService(new Intent(this, EarthquakeUpdateService.class));
+                return true;
+            }
+            case (R.id.menu_preferences): {
                 Class c = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB ? PreferencesActivity.class : FragmentPreferences.class;
                 Intent i = new Intent(this, c);
                 startActivityForResult(i, SHOW_PREFERENCES);
                 return true;
+            }
+            default:break;
         }
 
         return false;
