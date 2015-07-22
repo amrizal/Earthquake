@@ -1,8 +1,10 @@
 package com.example.amrizalzainuddin.earthquake;
 
+import android.app.DialogFragment;
 import android.app.ListFragment;
 import android.app.LoaderManager;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -13,7 +15,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 import org.w3c.dom.Document;
@@ -97,5 +101,33 @@ public class EarthquakeListFragment extends ListFragment implements LoaderManage
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         adapter.swapCursor(null);
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+
+        ContentResolver cr = getActivity().getContentResolver();
+
+        Cursor result = cr.query(ContentUris.withAppendedId(EarthquakeProvider.CONTENT_URI, id), null, null, null, null);
+
+        if(result.moveToFirst()){
+            Date date = new Date(result.getLong(result.getColumnIndex(EarthquakeProvider.KEY_DATE)));
+            String details = result.getString(result.getColumnIndex(EarthquakeProvider.KEY_DETAILS));
+            double magnitude = result.getDouble(result.getColumnIndex(EarthquakeProvider.KEY_MAGNITUDE));
+            String linkString = result.getString(result.getColumnIndex(EarthquakeProvider.KEY_LINK));
+            double lat = result.getDouble(result.getColumnIndex(EarthquakeProvider.KEY_LOCATION_LAT));
+            double lng = result.getDouble(result.getColumnIndex(EarthquakeProvider.KEY_LOCATION_LNG));
+
+            Location location = new Location("db");
+            location.setLatitude(lat);
+            location.setLongitude(lng);
+
+            Quake quake = new Quake(date,details, location, magnitude, linkString);
+
+            DialogFragment newFragment = EarthquakeDialog.newInstance(getActivity(), quake);
+            newFragment.show(getFragmentManager(), "dialog");
+        }
+
     }
 }
