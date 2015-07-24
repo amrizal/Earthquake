@@ -49,7 +49,8 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class EarthquakeUpdateService extends IntentService {
 
-    public static  String TAG = "EARTHQUAKE_UPDATE_SERVICE";
+    public static String TAG = "EARTHQUAKE_UPDATE_SERVICE";
+    public static String QUAKES_REFRESHED = "com.example.amrizalzainuddin.earthquake.QUAKES_REFRESHED";
 
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
@@ -143,6 +144,7 @@ public class EarthquakeUpdateService extends IntentService {
         }
 
         refreshEarthquakes();
+        sendBroadcast(new Intent(QUAKES_REFRESHED));
     }
 
     private void addNewQuake(Quake _quake) {
