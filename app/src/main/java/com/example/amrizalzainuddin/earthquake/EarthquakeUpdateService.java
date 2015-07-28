@@ -6,6 +6,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -127,6 +129,20 @@ public class EarthquakeUpdateService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        refreshEarthquakes();
+        sendBroadcast(new Intent(QUAKES_REFRESHED));
+
+        Context context = getApplicationContext();
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        ComponentName earthquakeWidget = new ComponentName(context, EarthquakeListWidget.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(earthquakeWidget);
+
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
         //retrieve the shared preferences
         Context context = getApplicationContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -143,8 +159,7 @@ public class EarthquakeUpdateService extends IntentService {
             alarmManager.cancel(alarmIntent);
         }
 
-        refreshEarthquakes();
-        sendBroadcast(new Intent(QUAKES_REFRESHED));
+        return super.onStartCommand(intent, flags, startId);
     }
 
     private void addNewQuake(Quake _quake) {

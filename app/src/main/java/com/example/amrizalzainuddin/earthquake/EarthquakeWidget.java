@@ -59,7 +59,7 @@ public class EarthquakeWidget extends AppWidgetProvider {
 
         views.setOnClickPendingIntent(R.id.widget_magnitude, pendingIntent);
         views.setOnClickPendingIntent(R.id.widget_details, pendingIntent);
-        
+
         //update the widget UI with the latest Earthquake details
         updateQuake(context, appWidgetManager, appWidgetIds);
     }
