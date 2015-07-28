@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.database.SQLException;
 import android.net.Uri;
+import android.provider.LiveFolders;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -23,7 +24,8 @@ import java.util.HashMap;
  */
 public class EarthquakeProvider extends ContentProvider {
 
-    public static  final Uri CONTENT_URI = Uri.parse("content://com.example.amrizalzainuddin.earthquakeprovider/earthquakes");
+    public static final Uri CONTENT_URI = Uri.parse("content://com.example.amrizalzainuddin.earthquakeprovider/earthquakes");
+    public static final Uri LIVE_FOLDER_URI = Uri.parse("content://com.example.amrizalzainuddin.provider.Earthquake/live_folder");
 
     //column names
     public static final String KEY_ID = "_id";
@@ -52,6 +54,7 @@ public class EarthquakeProvider extends ContentProvider {
     private static final int QUAKES = 1;
     private static final int QUAKE_ID = 2;
     private static final int SEARCH = 3;
+    private static final int LIVE_FOLDER = 4;
 
     private static final HashMap<String, String> SEARCH_PROJECTION_MAP;
     static {
@@ -60,6 +63,15 @@ public class EarthquakeProvider extends ContentProvider {
         " AS " + SearchManager.SUGGEST_COLUMN_TEXT_1);
         SEARCH_PROJECTION_MAP.put("_id", KEY_ID +
         " AS " + "_id");
+    }
+
+    static final HashMap<String, String> LIVE_FOLDER_PROJECTION;
+    static {
+        LIVE_FOLDER_PROJECTION = new HashMap<String, String>();
+        LIVE_FOLDER_PROJECTION.put(LiveFolders._ID, KEY_ID + " AS " + LiveFolders._ID);
+        LIVE_FOLDER_PROJECTION.put(LiveFolders.NAME, KEY_DETAILS + " AS " + LiveFolders.NAME);
+        LIVE_FOLDER_PROJECTION.put(LiveFolders.DESCRIPTION, KEY_DATE + " AS " + LiveFolders.DESCRIPTION);
+
     }
 
     private static final UriMatcher uriMatcher;
@@ -71,6 +83,7 @@ public class EarthquakeProvider extends ContentProvider {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI("com.example.amrizalzainuddin.earthquakeprovider", "earthquakes", QUAKES);
         uriMatcher.addURI("com.example.amrizalzainuddin.earthquakeprovider", "earthquakes/#", QUAKE_ID);
+        uriMatcher.addURI("com.example.amrizalzainuddin.provider.Earthquake", "live_folder", LIVE_FOLDER);
         uriMatcher.addURI("com.example.amrizalzainuddin.earthquakeprovider",
                 SearchManager.SUGGEST_URI_PATH_QUERY, SEARCH);
         uriMatcher.addURI("com.example.amrizalzainuddin.earthquakeprovider",
@@ -95,6 +108,8 @@ public class EarthquakeProvider extends ContentProvider {
             case SEARCH: qb.appendWhere(KEY_SUMMARY + " LIKE \"%" +
                             uri.getPathSegments().get(1) + "%\"");
                         qb.setProjectionMap(SEARCH_PROJECTION_MAP);
+                        break;
+            case LIVE_FOLDER: qb.setProjectionMap(LIVE_FOLDER_PROJECTION);
                         break;
             default: break;
         }
@@ -121,7 +136,7 @@ public class EarthquakeProvider extends ContentProvider {
     @Override
     public String getType(Uri uri) {
         switch (uriMatcher.match(uri)){
-            case QUAKES: return "vnd.android.cursor.dir/vnd.amrizalzainuddin.earthquake";
+            case QUAKES|LIVE_FOLDER: return "vnd.android.cursor.dir/vnd.amrizalzainuddin.earthquake";
             case QUAKE_ID: return "vnd.android.cursor.item/vnd.amrizalzainuddin.earthquake";
             case SEARCH: return SearchManager.SUGGEST_MIME_TYPE;
             default:throw new IllegalArgumentException("Unsupported URI: " + uri);
